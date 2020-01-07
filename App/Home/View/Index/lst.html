@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>中奖名单列表</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- 新 Bootstrap 核心 CSS 文件 -->
+		
+
+		
+		<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+		}
+		body{
+			background: #f00;
+			color: yellow;
+			font-family: 微软雅黑;
+			background: url(__PUBLIC__/img/bg1.jpg) no-repeat top center;
+			background-attachment:fixed; 
+			background-size: cover; 
+			-webkit-background-size: cover; /*兼容Webkit内核浏览器如Chrome和Safari */ 
+			-o-background-size: cover;/* 兼容Opera  */
+			zoom: 1;
+		}
+		.table-data {
+			width: 96%;
+			margin: 0 auto;
+			margin-top: 100px;
+			border-collapse: 0px;
+			font-size: 32px;
+			text-align: center;
+			border-collapse: 0;
+			border-spacing: 0;
+			border-bottom: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+		}
+		.table-data tr{
+			height: 50px;
+			
+		}
+		caption {
+			padding: 0px 0 20px 0;
+			font-weight: bold;
+			font-size: 46px;
+		}
+		caption a{
+			font-size:16px;
+			/*float:right;*/
+			/*margin: 55px 0 50px 0;*/
+			font-weight:normal;
+			color: yellow;
+			text-decoration: none;
+		}
+		.table-data tr td,.table-data tr th {
+			border-left: 1px solid #ccc;
+			border-top: 1px solid #ccc;
+
+			padding: 10px;
+		}
+		.table-data tr th.title{
+			width: 160px;
+		}
+		.table-data tr th.name{
+			/*width: 100px;*/
+		}
+		.table-data tr th.info{
+			width: 160px;
+		}
+		.table-data tr th.person{
+			width: 160px;
+		}
+		.table-data tr td.td_info {
+			padding:  15px 20px;
+			line-height: 1.5em;
+			text-align: left;
+		}
+		.table-data tr td.td_info ul li{
+			list-style: none;
+			display: inline-block;
+			*display: inline;
+			*zoom: 1;
+			width: 240px;
+		}
+		</style>
+    </head>
+    <body>
+        <div>
+            <table class="table-data">
+
+            	<thead>
+            		<caption>年会获奖名单表 <br>
+            		<a href="{:U('Index/index')}">[ 返回抽奖界面 ]</a> | <a href="{:U('Index/del')}">清空中奖纪录</a></caption>
+        		</thead>
+
+				<tbody>
+				    <tr>
+            			<th class="title">奖项名称</th>
+            			<th class="name">中奖名单</th>
+            			<th class="info">奖金详情</th>
+            			<th class="person">赞助者</th>
+            		</tr>
+					<?php foreach ($awardsData as $k => $v): ?>
+					<tr>
+            			<td>{$v.aw_name}</td>
+            			<td class="td_info">
+            				<ul>
+	            				<?php $count = 0;?>
+	            				<?php foreach ($userData as $kk => $vv): ?>
+	            					<?php if ($v['aid']==$vv['awards_id'] || $v['aid']==$vv['awards_id2']): ?>
+	            						<li>{$vv.username}{$vv.user_id}</li>
+	            						<?php $count++;?>
+	            					<?php endif ?>
+	            				<?php endforeach ?> 
+	            				--（共
+	            				<?php echo $count;?>
+	            				人）
+            				</ul>
+            			</td>
+            			<td>{$v.aw_info}</td>
+            			<td>{$v.hp_name}</td>
+            		</tr>	
+					<?php endforeach ?>
+            	</tbody>
+            </table>
+        
+        </div>
+    </body>
+</html>
+

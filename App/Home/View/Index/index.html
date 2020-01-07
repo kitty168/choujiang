@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>kitty.cheng 抽奖系统</title>
+    <style type="text/css">
+    *{
+    	margin: 0;
+    	padding:0;
+    	font-family: 微软雅黑;
+    }
+    body{
+    	width: 100%;
+    	height: 100%;
+		background: url(__PUBLIC__/img/bg1.jpg) no-repeat top center;
+		background-attachment:fixed; 
+		background-size: cover; 
+		-webkit-background-size: cover; /*兼容Webkit内核浏览器如Chrome和Safari */ 
+		-o-background-size: cover;/* 兼容Opera  */
+		zoom: 1;
+    }
+    .title {
+		font-size:60px;
+		font-family: 微软雅黑;
+		color:yellow;
+		text-align:center;
+		padding: 60px 0 30px 0;
+    }
+    .title span{
+    	color: yellow;
+    	font-size: 46px;
+    }
+    #jiangming {
+    	text-align: center;
+    	color: yellow;
+    	font-size: 36px;
+    	padding: 0 0 20px 0;
+    }
+	#zhongjiangList{
+		width: 1000px;
+		margin: 0 auto;
+		font-size: 45px;
+		color: yellow;
+		background: red;
+		text-align: center;
+		padding: 20px 0 20px 45px;
+		border-radius: 35px;
+	}
+	#zhongjiangList li{
+		width: 180px;
+		height: 68px;
+		line-height: 68px;
+		text-align: left;
+		display: inline-block;
+
+	}
+	#is_show{
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	#show{
+		display: none;
+	}
+	#con {
+		position: fixed;
+		right: 10px;
+		bottom: 10px;
+		border: 1px solid #ccc;
+	}
+	#start,#stop {
+
+	}
+	.col {
+
+	}
+	.aw_add {
+		width: 100px;
+	}
+    </style>
+
+  </head>
+  <body>
+  	<h1 class="title">{:C('TITLE_1')}<br><span>{:C('TITLE_2')}</span></h1>
+
+
+	<!-- 奖项名称 -->
+	<div id="jiangming">
+		
+	</div>
+
+	<!-- 中奖名单 -->
+	<div id="zhongjiang">
+		
+	</div>
+
+	<div id="con">
+		<form action="" method="post">
+			<input type="radio" name="type" value="1" id="type1" checked="checked"><label for="type1">one</label>&nbsp;&nbsp;
+			<!-- <input type="radio" name="type" value="2" id="type2"><label for="type2">two</label> -->
+			<a href="{:U('Login/logOut')}"> 退出系统 </a>
+			<br>
+			<select name="awards_id" id="awards_id">
+				<option value="" selected="selected">请选择</option>
+
+				<?php 
+					foreach ($awards as $k => $v) {
+						echo '<option value="'.$v['aid'].'" jiangNum="'.$v['aw_num'].'">'.$v['aw_name'].'</option>';
+					}
+				?>
+				
+			</select>
+			<span id="is_show">显示</span>
+			<div id="show">
+				奖项：<input type="text" name="aw_name" class="aw_add" placeholder="奖项名称" /> <br>
+				数量：<input type="text" name="aw_num" class="aw_add" placeholder="一次抽取的人数" /> <br>
+				次数：<input type="text" name="aw_time" class="aw_add" placeholder="抽取的次数" /> <br>
+				奖品：<input type="text" name="aw_info" class="aw_add" placeholder="奖品描述" /> <br>
+				赞助：<input type="text" name="hp_name" class="aw_add" placeholder="由谁赞助" /><br>
+				<input type="button" id="addAw" value="增加奖项" />
+			</div>
+
+		</form>
+
+		<a href="javascript:void(0);" id="start" class="col">开始</a>&nbsp;&nbsp;
+		<a href="javascript:void(0);" id="stop" class="col">停止</a>&nbsp;
+		<a href="{:U('Index/lst')}" title="点击查看中奖名单" class="col"><span id="shengYuNum">{$shengYuNum}</span></a>
+	</div>
+
+
+
+    <script src="__PUBLIC__/js/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript">
+		
+		var dataArray = new Array();
+		// var jiangNum = 20;
+    	$("#start").click(function(event) {
+    		
+    		if(typeof(timer) == "string" || typeof(timer) == "undefined") {
+
+	    		var awards_id = $("#awards_id option:checked").val();
+	    		if(awards_id == 0) {
+	    			alert("请选择需要抽取的奖项");
+	    			return false;
+				}
+				$("form").hide();
+	    		var jiangming = $("#awards_id option:checked").text();
+	    		var jiangNum = $("#awards_id option:checked").attr('jiangNum');
+	    		var type = $("input[name='type']:checked").val();
+	    		// alert(type);
+	    		$("#jiangming").html(jiangming+" 正在抽取中……");
+
+	    		$.ajax({
+	    			url: '{:U("Index/getUser")}',
+	    			type: 'POST',
+	    			dataType: 'json',
+	    			data: {'type':type},
+					beforeSend: function() {
+						$("#zhongjiang").html(
+							'<p style="color:#999;font-size:36px;text-align:center;">加载中……</p>'
+							);
+					},
+	    			success: function(data) {
+	                    dataArray = data;
+	                    // alert('总人数：' + dataArray.length);
+	                    // alert('需抽取的人数：' + jiangNum);
+	                    if(dataArray.length > jiangNum){
+							start(dataArray,jiangNum);
+	                    }else{
+	                    	$("#zhongjiang").html(
+							'<p style="color:#999;font-size:36px;text-align:center;">人数不够</p>'
+							);
+	                    	alert('人数不够');
+	                    }
+	                    
+	    			}
+	    		});
+    		}else{
+    			return false;
+    		}
+    	});
+
+
+
+    	$("#stop").click(function(event) {
+
+    		if(typeof(timer) == "number") {
+    			var str_jiangming = $("#jiangming").html();
+    			$("#jiangming").html(str_jiangming.replace('正在抽取中……','中奖名单'));
+
+    			stop();
+    			timer = "";
+
+				var type = $("input[name='type']:checked").val();//是否进行第二次抽奖
+    			var awards_id = $("#awards_id option:selected").val();
+				// ;
+	    		var zhongjiangUid = $('#zhongjiangList li');
+	    		var uids='';
+	    		for (var i = 0; i < zhongjiangUid.length; i++) {
+	    			uids += zhongjiangUid.eq(i).attr('uid')+',';
+	    		};
+	    		uids = uids.substr(0,uids.length-1);
+
+	    		$.ajax({
+	    			url: '{:U("Index/updateUser")}',
+	    			type: 'POST',
+	    			dataType: 'json',
+	    			data: {'uids': uids,'awards_id':awards_id,'type':type},
+	    			success: function(data) {
+						var str_select = '<option value="" selected="selected">请选择</option>';
+                    	for (var i = 0; i < data.length; i++) {
+                    		str_select += '<option value="'+ data[i].aid+'" jiangNum="'+data[i].aw_num+'">'+data[i].aw_name+'</option>';
+                    	}
+                    	$("#awards_id").html(str_select);
+                    	// 更新剩余人数,
+                    	$.ajax({
+			    			url: '{:U("Index/getUserRemainCount")}',
+			    			type: 'POST',
+			    			dataType: 'json',
+			    			success:function(count){
+			    				$("#shengYuNum").html(count);
+			    			}
+			    		});
+	    			}
+	    		});
+	    	}
+    		$("form").show();
+    	});
+		
+		//增加奖项
+		$("#addAw").click(function(event) {
+			var aw_name = $(":text[name='aw_name']").val();
+			var aw_num = $(":text[name='aw_num']").val();
+			var aw_time = $(":text[name='aw_time']").val();
+			var aw_info = $(":text[name='aw_info']").val();
+			var hp_name = $(":text[name='hp_name']").val();
+
+			if(!aw_name) {
+				alert('奖项不能为空');
+				return false;
+			}
+			if(!aw_num) {
+				alert('奖项数量不能为空');
+				return false;
+			}
+			var rep = /^\+?[1-9][0-9]*$/;
+
+			if(!rep.test(aw_num)) {
+				alert('奖项数量必须为数字');
+				return false;
+			}
+			if(!aw_info) {
+				alert('奖品名称不能为空');
+				return false;
+			}
+
+    		$.ajax({
+    			url: '{:U("Index/addAward")}',
+    			type: 'POST',
+    			dataType: 'json',
+    			data: {'aw_name': aw_name,'aw_num': aw_num,'aw_time': aw_time,
+    					'aw_info': aw_info,'hp_name': hp_name},
+    			success: function(data) {
+                    if(data == 2) {
+						alert('奖项名称已存在，请重新填写');
+                    }else if(data == 0) {
+                    	alert('您的数据没有被添加');
+                    }else{
+                    	$("input.aw_add").val('');//清空输入框
+                    	
+                    	alert('增加奖项【'+aw_name+'】成功');
+                    	var str_select = '<option value="" selected="selected">请选择</option>';
+                    	for (var i = 0; i < data.length; i++) {
+                    		str_select += '<option value="'+ data[i].aid+'" jiangNum="'+data[i].aw_num+'">'+data[i].aw_name+'</option>';
+                    	}
+                    	$("#awards_id").html(str_select);
+                    }
+    			}
+    		});
+    		
+    	});
+
+
+		function start(dataAll,jiangNum) {
+			timer = setInterval(function(){
+			    	zhongjiangList(dataAll,jiangNum);
+			    },5);
+		}
+	    function stop() {
+	    	clearInterval(timer);
+	    }
+
+	    function zhongjiangList(dataAll,zhongjiangNum) {
+		    var tableHtml="<ul id='zhongjiangList'>";
+		    map = new Array();
+		    for (var i = 0; i <zhongjiangNum; i++) {
+		    	var r = getRound(0,dataAll.length-1,map);
+		    	
+		    	tableHtml += "<li uid='"+dataAll[r]['uid']+"'>"+dataAll[r]['username']+"</li>";
+		    }
+		    tableHtml += "</ul>";
+
+		    $('#zhongjiang').html(tableHtml);
+
+	    }
+
+	    function getRound(min,max,map){
+	    	var indexNum=parseInt(Math.random()*(max-min+1));
+	    	if($.inArray(indexNum, map) == -1){
+	    		map.push(indexNum);
+	    		return indexNum;
+	    	}else{
+	    		return getRound(min,max,map);
+	    	}
+	    }
+
+	    $("#is_show").click(function(event) {
+	    	var str = $(this).html();
+	    	if(str == "显示") {
+	    		$(this).html("隐藏");
+	    		$("#show").show();
+	    	}else {
+	    		$(this).html("显示");
+				$("#show").hide();
+	    	}
+	    });
+
+	</script>
+  </body>
+</html>
