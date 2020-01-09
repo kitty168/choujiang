@@ -4,7 +4,7 @@
 * 适用于公司年会抽奖活动时使用。
 
 ## 在线Demo体验
-[在线体验](http://choujiang.18php.com)  
+[在线体验](http://choujiang.18php.com?_blank)  
 授权码： 18php
 
 ## 部署
